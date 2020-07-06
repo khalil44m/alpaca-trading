@@ -21,7 +21,8 @@ from xgboost import XGBRegressor
 ############### Input params ##################
 stock = 'DIA'
 time_window = 'daily_adj'
-stk_path = f'./{stock}_{time_window}.csv'
+
+stk_path = './{stock}_{time_window}.csv'
 
 today = dt.datetime.now().date()
 
@@ -565,7 +566,7 @@ ax.legend(['train', 'dev', 'test', 'predictions'])
 ax.set_xlabel("date")
 ax.set_ylabel("USD")
 
-est_df.to_csv(f'./{stock}_{time_window}_xgbpredict.csv')
+est_df.to_csv('./{stock}_{time_window}_xgbpredict.csv')
 
 #plt.show()
 
