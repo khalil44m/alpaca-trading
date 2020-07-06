@@ -22,7 +22,6 @@ from xgboost import XGBRegressor
 stock = 'DIA'
 time_window = 'daily_adj'
 stk_path = f'./{stock}_{time_window}.csv'
-#if not path.exists(stk_path):
 
 today = dt.datetime.now().date()
 
