@@ -1,22 +1,7 @@
-#Alcapa
-API_KEY = "PKZSYQS4N9O5GQYOG735"
-API_SECRET_KEY = "6/JQ7OHMqJnVNmRl4KfruiCwRRGagGMdWNu5d4a2"
-
-#Datahub
-wti_daily_path = 'https://pkgstore.datahub.io/core/oil-prices/wti-daily/archive/06c5d4808369fd5ec71b045210162db7/wti-daily.csv'
-brent_daily_path = 'https://pkgstore.datahub.io/core/oil-prices/brent-daily/archive/b220560ec00f25407b0cc9ed2198a687/brent-daily.csv'
-vix_daily_path = 'https://pkgstore.datahub.io/core/finance-vix/vix-daily/archive/d4a51363da29db079f13cd2351f72145/vix-daily.csv'
-
-#pyEX
-TOKEN_pyEX = 'sk_555e253314b9446c9a75c75399741744'
-
-#AlphaVantage
-AV_API = 'OJEOM5EZYRVK9GBF'
-
-from alpha_vantage.timeseries import TimeSeries
-from alpha_vantage.techindicators import TechIndicators
+#from alpha_vantage.timeseries import TimeSeries
+#from alpha_vantage.techindicators import TechIndicators
 from pprint import pprint
-import json
+import requests, json
 import argparse
 
 import pandas as pd
@@ -24,25 +9,62 @@ from sklearn import preprocessing
 import numpy as np
 
 
+#pyEX
+TOKEN_pyEX = 'sk_555e253314b9446c9a75c75399741744'
+
+#AlphaVantage
+AV_API = 'OJEOM5EZYRVK9GBF'
+AV_URL = 'https://www.alphavantage.co/query?function='
+
+#Alcapa
+API_KEY = "PKZSYQS4N9O5GQYOG735"
+API_SECRET_KEY = "6/JQ7OHMqJnVNmRl4KfruiCwRRGagGMdWNu5d4a2"
+
+#Datahub.io
+oil_package_url = 'https://pkgstore.datahub.io/core/oil-prices/756/datapackage.json'
+
+vix_package_url = 'https://datahub.io/core/finance-vix/datapackage.json'
+
+
+def oil_retriever(name):
+    r = requests.get(oil_package_url)
+    table = json.loads(r.text)
+    for dct in table["resources"]:
+        if dct['name'] == name:
+            return dct['path']
+
+
+def vix_retriever():
+    response = requests.get(vix_package_url)
+    table = json.loads(response.text)
+    for dct in table['resources']:
+        if dct['name'] == "vix-daily_csv":
+            return(dct['path'])
+
+
 def save_dataset(symbol, time_window):
-    api_key = AV_API
+
     print(symbol, time_window)
+    alpha_csv = AV_URL + 'TIME_SERIES_{time_window}&symbol={symbol}&outputsize=full&apikey={AV_API}&datatype=csv'.format(time_window=time_window.upper(), symbol = symbol, AV_API = AV_API)
+    
+    data_ts = pd.read_csv(alpha_csv)
 
-    #frames = []
+    # ts = TimeSeries(key=api_key, output_format='pandas')
+    # if time_window == 'intraday':
+    #     data_ts, meta_data_ts = ts.get_intraday(
+    #         symbol=symbol, interval='5min', outputsize='full')
+    # elif time_window == 'daily':
+    #     data_ts, meta_data_ts = ts.get_daily(symbol, outputsize='full')
+    # elif time_window == 'daily_adj':
+    #     data_ts, meta_data_ts = ts.get_daily_adjusted(symbol, outputsize='full')
 
-    ts = TimeSeries(key=api_key, output_format='pandas')
-    if time_window == 'intraday':
-        data_ts, meta_data_ts = ts.get_intraday(
-            symbol=symbol, interval='5min', outputsize='full')
-    elif time_window == 'daily':
-        data_ts, meta_data_ts = ts.get_daily(symbol, outputsize='full')
-    elif time_window == 'daily_adj':
-        data_ts, meta_data_ts = ts.get_daily_adjusted(symbol, outputsize='full')
+    data_ts['timestamp'] = pd.to_datetime(data_ts['timestamp'])
+    data_ts = data_ts.rename(columns={'timestamp' : 'date'}) #1. open': 'Open', '2. low': 'Low', '3. high': 'High', '4. close': 'Close'})
 
-    data_ts = data_ts.reset_index().set_index('date', drop = False)
-    data_ts.index.name = None
-    data_ts['date'] = pd.to_datetime(data_ts['date'])
-    data_ts = data_ts.rename(columns={'1. open': 'Open', '2. low': 'Low', '3. high': 'High', '4. close': 'Close'})
+
+    brent_daily_path = oil_retriever("brent-daily_csv")
+    wti_daily_path = oil_retriever("wti-daily_csv")
+    vix_daily_path = vix_retriever()
 
     brent_df = pd.read_csv(brent_daily_path)
     wti_df = pd.read_csv(wti_daily_path)

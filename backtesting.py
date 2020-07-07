@@ -3,9 +3,9 @@ import backtrader as bt
 import yfinance as yf
 
 import config #xgb_predict #neuralnetwork_tech
-from datetime import datetime, timedelta
+import datetime as dt
 import os.path, time
-from os import path
+
 
 import numpy as np
 import pandas as pd
@@ -22,8 +22,8 @@ class Backtesting():
 
     def Backtest(self):
         
-        #filename = f'./{self.stock}_{self.time_window}.csv'
         filename = f'./{self.stock}_{self.time_window}_xgbpredict.csv'
+
         #modelfile = f'./technical_{self.stock}_model.h5'
         
         # if not path.exists(filename): # and time.ctime(os.path.getctime(filename))[:10] == time.ctime()[:10]):
@@ -137,7 +137,7 @@ class Backtesting():
 
 btst = Backtesting()
 btst.stock = 'AAPL'
-btst.time_window = 'daily_adj'
+btst.time_window = 'daily_adjusted'
 btst.thresh = 0.005
 btst.Backtest()
 
